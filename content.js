@@ -7,6 +7,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     const tabsOpen = request.window;
     const body = document.querySelector("body");
 
+
+
     tabsListContainer.style.width = "100%";
     tabsListContainer.style.height = "100%"
     tabsListContainer.style.background = "pink"
@@ -39,6 +41,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     container.append(tabsListContainer);
     body.appendChild(container);
 
+    closeSearchInput(body, container);
     listTab(tabsOpen)
 
     searchInput.addEventListener('input', (e) => {
@@ -75,5 +78,12 @@ function listTab(tabs) {
     tabsListContainer.append(tabList);
     tabList.innerText = tab.title;
   })
+}
 
+function closeSearchInput(parentElement, childElement) {
+  document.addEventListener('keyup', (e) => {
+    if (e.key === "Escape") {
+      parentElement.removeChild(childElement);
+    }
+  })
 }
