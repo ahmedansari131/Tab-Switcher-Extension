@@ -1,6 +1,3 @@
-// const tabsListContainer = document.createElement("ul");
-// const searchInput = document.createElement("input");
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === "openPopup") {
     const containerStyles = {
@@ -46,6 +43,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     const searchInputAttributes = {
       type: "search",
       placeholder: "Find tab",
+      id: "search-input-001",
     };
 
     const tabListContainerAttributes = {
@@ -75,41 +73,60 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     if (!body.lastChild.id && body.lastChild.id !== "search-container-001") {
       body.appendChild(container);
-      listTab(tabsOpen);
+      searchInput.focus();
+
+      tabsOpen.forEach((tab) => {
+        createTabList(tab.title);
+      });
     }
 
     closeSearchInput(body, container);
 
-    searchInput.addEventListener("input", (e) => {
+    let filteredSearch = [];
+    searchInput.addEventListener("input", (event) => {
+      const query = event.target.value.toLowerCase();
+      filteredSearch = [];
+
       tabsOpen.forEach((tab) => {
-        if (tab.title.toLowerCase().includes(e.target.value.toLowerCase())) {
-          tabsListContainer.innerHTML = "";
-          const tabList = document.createElement("li");
-          tabList.style.color = "white";
-          tabsListContainer.appendChild(tabList);
-          tabList.innerText = tab.title;
-        } else if (e.target.value == "") {
-          listTab(tabsOpen);
-        } else {
-          tabsListContainer.innerHTML = "Tab not found";
-          tabsListContainer.style.color = "white";
+        if (tab.title.toLowerCase().includes(query)) {
+          if (!filteredSearch.includes(tab.title)) {
+            filteredSearch.push(tab.title);
+          }
         }
       });
+
+      createTabList(filteredSearch);
     });
+
     sendResponse({ status: "Feature toggled" });
   }
   return true;
 });
 
-function listTab(tabs) {
-  tabs.forEach((tab) => {
-    const tabList = createElement("li");
-    addStyleToElement(tabList, { listStyle: "none", padding: "0 1em", cursor: "pointer" });
-    const tabsListContainer = accessElement(".tab-list-container");
-    tabList.style.color = "white";
-    tabsListContainer.append(tabList);
-    tabList.innerText = tab.title;
-  });
+function createTabList(text) {
+  const tabListStyles = {
+    listStyle: "none",
+    padding: "0 1em",
+    cursor: "pointer",
+    color: "white",
+  };
+  const tabsListContainer = accessElement(".tab-list-container");
+
+  if (typeof text === "object") {
+    tabsListContainer.innerHTML = "";
+    text.forEach((tab) => {
+      const tabList = createElement("li");
+      const tabsListContainer = accessElement(".tab-list-container");
+      addStyleToElement(tabList, tabListStyles);
+      tabList.innerText = tab;
+      tabsListContainer.append(tabList);
+    });
+    return;
+  }
+  const tabList = createElement("li");
+  addStyleToElement(tabList, tabListStyles);
+  tabList.innerText = text;
+  tabsListContainer.append(tabList);
 }
 
 function createElement(element) {
@@ -139,4 +156,3 @@ function closeSearchInput(parentElement, childElement) {
 function accessElement(identifier) {
   return document.querySelector(identifier);
 }
-
