@@ -74,13 +74,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (!body.lastChild.id && body.lastChild.id !== "search-container-001") {
       body.appendChild(container);
       searchInput.focus();
+      renderTabList(tabsOpen);
+    }
 
-      tabsOpen.forEach((tab) => {
-        createTabList(tab.title);
+    if (tabsListContainer.childNodes) {
+      tabsListContainer.childNodes.forEach((child) => {
+        child.addEventListener("click", (e) => {
+          console.log("object");
+          chrome.runtime.sendMessage(
+            { action: "navigateToTab", tabId: e.currentTarget.id },
+            (response) => {}
+          );
+        });
       });
     }
 
-    closeSearchInput(body, container);
+    document.addEventListener("keyup", (event) => {
+      closeSearchInput(event, container);
+    });
 
     let filteredSearch = [];
     searchInput.addEventListener("input", (event) => {
@@ -90,12 +101,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       tabsOpen.forEach((tab) => {
         if (tab.title.toLowerCase().includes(query)) {
           if (!filteredSearch.includes(tab.title)) {
-            filteredSearch.push(tab.title);
+            filteredSearch.push(tab);
           }
         }
       });
 
-      createTabList(filteredSearch);
+      renderTabList(filteredSearch);
     });
 
     sendResponse({ status: "Feature toggled" });
@@ -103,29 +114,46 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   return true;
 });
 
-function createTabList(text) {
-  const tabListStyles = {
-    listStyle: "none",
-    padding: "0 1em",
-    cursor: "pointer",
-    color: "white",
-  };
+function renderTabList(text) {
   const tabsListContainer = accessElement(".tab-list-container");
 
   if (typeof text === "object") {
     tabsListContainer.innerHTML = "";
     text.forEach((tab) => {
-      const tabList = createElement("li");
-      const tabsListContainer = accessElement(".tab-list-container");
-      addStyleToElement(tabList, tabListStyles);
-      tabList.innerText = tab;
-      tabsListContainer.append(tabList);
+      createTabList(tab);
     });
     return;
   }
+  createTabList(tab);
+}
+
+function createTabList(tab) {
+  const tabListStyles = {
+    listStyle: "none",
+    padding: "0 1em",
+    cursor: "pointer",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    gap: "2em",
+  };
+  const favIconStyles = {
+    width: "20px",
+    height: "20px",
+  };
+  const tabsListContainer = accessElement(".tab-list-container");
+
   const tabList = createElement("li");
+  const tabListTitle = createElement("span");
+  const favIcon = createElement("img");
+
   addStyleToElement(tabList, tabListStyles);
-  tabList.innerText = text;
+  addAttributeToElement(tabList, { id: tab.id });
+  tabListTitle.innerText = tab.title;
+  favIcon.src = tab.favIconUrl || "D:\\Learnings\\Chrome Extensions\\op_shortcuts\\images\\default.jpg";
+  addStyleToElement(favIcon, favIconStyles);
+  tabList.append(favIcon);
+  tabList.append(tabListTitle);
   tabsListContainer.append(tabList);
 }
 
@@ -145,12 +173,10 @@ function addAttributeToElement(element, attributes) {
   }
 }
 
-function closeSearchInput(parentElement, childElement) {
-  document.addEventListener("keyup", (e) => {
-    if (e.key === "Escape") {
-      parentElement.removeChild(childElement);
-    }
-  });
+function closeSearchInput(event, childElement) {
+  if (event.key === "Escape") {
+    if (childElement) childElement.remove();
+  }
 }
 
 function accessElement(identifier) {
