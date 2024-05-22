@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Website Shortcuts",
+    "name": "Tab Switcher",
     "version": "1.0",
-    "description": "Create keyboard shortcuts for specific tasks on certain websites.",
+    "description": "Switch tab easily.",
     "permissions": [
         "activeTab",
         "tabs",
@@ -17,11 +17,11 @@
     },
     
     "commands": {
-        "open-popup": {
+        "open-search-container": {
             "suggested_key": {
                 "default": "Ctrl+Shift+F"
             },
-            "description": "Toggle feature foo"
+            "description": "Activate search container"
         }
     }
 }
